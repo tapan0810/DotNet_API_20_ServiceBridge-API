@@ -10,9 +10,12 @@ namespace DotNet_API_20_.Controllers
     public class ProductController(IProductService product) : ControllerBase
     {
         [HttpGet("GetAllProducts")]
-        public async Task<ActionResult<List<Product>>> GetAllProducts()
+        public async Task<ActionResult<List<Product>>> GetAllProducts([FromQuery]int pageNumber,[FromQuery]int pageSize)
         {
-            var products = await product.GetProducts();
+            //if (pageNumber <= 0) pageNumber = 1;
+            //if (pageSize <= 0) pageSize = 10;
+
+            var products = await product.GetProducts( pageNumber,pageSize );
 
             if(products is null || products.Count == 0)
             {

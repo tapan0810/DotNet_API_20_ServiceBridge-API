@@ -4,6 +4,6 @@ namespace DotNet_API_20_.Service
 {
     public interface IProductService
     {
-        public Task<List<Product>> GetProducts();
+        public Task<List<Product>> GetProducts(int pageNumber , int pageSize);
     }
 }
