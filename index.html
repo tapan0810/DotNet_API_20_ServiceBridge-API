@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Dashboard</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+}
+
+h1 {
+    color: #fff;
+    margin-bottom: 30px;
+    font-size: 2.5rem;
+    letter-spacing: 1px;
+    text-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 25px;
+    width: 100%;
+    max-width: 1100px;
+    margin-top: 20px;
+}
+
+.card {
+    backdrop-filter: blur(15px);
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 25px;
+    border-radius: 18px;
+    color: #fff;
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+.card h2 {
+    margin-bottom: 10px;
+    font-size: 1.3rem;
+}
+
+.card p {
+    margin: 6px 0;
+}
+
+.price {
+    margin-top: 10px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #00e676;
+}
+
+.loader {
+    border: 6px solid rgba(255,255,255,0.3);
+    border-top: 6px solid #00e5ff;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+    margin-top: 40px;
+}
+
+@keyframes spin {
+    100% { transform: rotate(360deg); }
+}
+
+.pagination {
+    margin-top: 30px;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+button {
+    padding: 10px 20px;
+    border-radius: 30px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+    background: linear-gradient(45deg,#00c6ff,#0072ff);
+    color: white;
+}
+
+button:hover:not(:disabled) {
+    transform: scale(1.1);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+button:disabled {
+    background: grey;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.page-info {
+    color: white;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.error {
+    color: #ff5252;
+    margin-top: 20px;
+    font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Product Dashboard</h1>
+
+<div id="loader" class="loader"></div>
+<div id="error"></div>
+<div id="product-container" class="container"></div>
+
+<div class="pagination">
+    <button id="prevBtn">Previous</button>
+    <span class="page-info" id="pageInfo"></span>
+    <button id="nextBtn">Next</button>
+</div>
+
+<script>
+const baseUrl = "https://localhost:5027/api/Product/GetAllProducts";
+
+let pageNumber = 1;
+let pageSize = 6;
+
+const container = document.getElementById("product-container");
+const loader = document.getElementById("loader");
+const errorDiv = document.getElementById("error");
+const pageInfo = document.getElementById("pageInfo");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
+
+async function loadProducts() {
+    loader.style.display = "block";
+    container.innerHTML = "";
+    errorDiv.innerHTML = "";
+
+    try {
+        const response = await fetch(`${baseUrl}?pageNumber=${pageNumber}&pageSize=${pageSize}`);
+
+        if (!response.ok) {
+            throw new Error("Server error");
+        }
+
+        const products = await response.json();
+
+        loader.style.display = "none";
+
+        if (products.length === 0 && pageNumber > 1) {
+            pageNumber--;
+            return loadProducts();
+        }
+
+        products.forEach(product => {
+            const card = document.createElement("div");
+            card.className = "card";
+
+            card.innerHTML = `
+                <h2>${product.name}</h2>
+                <p><strong>ID:</strong> ${product.id}</p>
+                <p class="price">₹ ${product.price}</p>
+            `;
+
+            container.appendChild(card);
+        });
+
+        pageInfo.textContent = `Page ${pageNumber}`;
+        prevBtn.disabled = pageNumber === 1;
+        nextBtn.disabled = products.length < pageSize;
+
+    } catch (error) {
+        loader.style.display = "none";
+        errorDiv.innerHTML = "<div class='error'>Failed to load products.</div>";
+        console.error(error);
+    }
+}
+
+prevBtn.addEventListener("click", () => {
+    if (pageNumber > 1) {
+        pageNumber--;
+        loadProducts();
+    }
+});
+
+nextBtn.addEventListener("click", () => {
+    pageNumber++;
+    loadProducts();
+});
+
+loadProducts();
+</script>
+
+</body>
+</html>
